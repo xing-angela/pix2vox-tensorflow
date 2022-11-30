@@ -34,7 +34,7 @@ def main():
 
     rand_indices = random.sample(range(0, len(images)), 10)
     rand_imgs = [images[i] for i in rand_indices]
-    augmented = augment_prep_fn(tf.convert_to_tensor(rand_imgs))
+    augmented = augment_prep_fn(rand_imgs)
 
     # fig = plt.figure()
 
