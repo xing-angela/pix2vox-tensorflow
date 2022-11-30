@@ -8,7 +8,6 @@ from datetime import datetime as dt
 from enum import Enum
 import sys
 import utils.binvox_rw
-import tensorflow as tf
 
 
 class DatasetType(Enum):
