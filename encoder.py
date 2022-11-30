@@ -9,18 +9,18 @@ class Encoder(tf.keras.layers.Layer):
         vgg16 = tf.keras.applications.vgg16.VGG16(weights = 'imagenet')
         self.vgg = tf.keras.models.Sequential([*list(vgg16.layers)]) # want to translate from pytorch: .features.children()
         self.layer1 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2d(filters=512, kernel_size=3, activation='relu'), # pytorch: in_channels=512, out_channels=512, activation is not a parameter
+            tf.keras.layers.Conv2D(filters=512, kernel_size=3, activation='relu'), # pytorch: in_channels=512, out_channels=512, activation is not a parameter
             tf.keras.layers.BarchNormalization(),
             tf.keras.layers.ELU() #change to Dense with activation 'elu'?
         ])
         self.layer2 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2d(filters=512, kernel_size=3, activation='relu'),
+            tf.keras.layers.Conv2D(filters=512, kernel_size=3, activation='relu'),
             tf.keras.layers.BarchNormalization(),
             tf.keras.layers.ELU(),
             tf.keras.layers.MaxPool2D(pool_size=(3,3)) # kernel_size = 3 
         ])
         self.layer3 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2d(filters=256, kernel_size=1, activation='relu'), # pytorch: in_channels=512, out_channels=256
+            tf.keras.layers.Conv2D(filters=256, kernel_size=1, activation='relu'), # pytorch: in_channels=512, out_channels=256
             tf.keras.layers.BarchNormalization(),
             tf.keras.layers.ELU(),
         ])
