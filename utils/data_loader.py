@@ -15,20 +15,20 @@ class DatasetType(Enum):
     TEST = 1
     VAL = 2
 
+###################################### SHAPENET ######################################
+
 
 class ShapeNetDataset:
     def __init__(self, dataset_type, data_files, n_views_rendering):
         self.dataset_type = dataset_type
         self.data_files = data_files
         self.n_views_rendering = n_views_rendering
-        self.images = []
-        self.volumes = []
+        self.data = []
 
     def set_data(self):
         for i in range(len(self.data_files)):
-            taxonomy_name, split_name, images, volume = self.get_datum(i)
-            self.images.extend(images)
-            self.volumes.extend(volume)
+            datum = self.get_datum(i)
+            self.data.extend(datum)
 
         print('[INFO] %s Complete collecting saving images and volumes of dataset.' % (
             dt.now()))
@@ -151,6 +151,9 @@ class ShapeNetDataLoader:
             })
 
         return data_files
+
+
+######################################################################################
 
 
 DATASET_MAPPINGS = {

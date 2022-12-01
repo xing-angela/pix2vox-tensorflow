@@ -17,7 +17,9 @@ def parse_args():
                         choices=["train, test"], help="Type of task (train, test, both)")
     parser.add_argument('--epoch', help='Number of epoches',
                         default=250, type=int)
-    parser.add_argument('--out', help='Set output path', default="output")
+    parser.add_argument('--out', default="output", help='Set output path')
+    parser.add_argument('--type', default="F",
+                        choices=["A", "F"], help="Type of model -- Pix2VoxA or Pix2VoxF")
 
     return parser.parse_args()
 
