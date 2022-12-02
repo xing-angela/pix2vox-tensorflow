@@ -4,71 +4,12 @@ import random
 import cv2
 import numpy as np
 import sys
+import tensorflow as tf
 from datetime import datetime as dt
-from enum import Enum
 import sys
 import utils.binvox_rw
 
-
-class DatasetType(Enum):
-    TRAIN = 0
-    TEST = 1
-    VAL = 2
-
 ###################################### SHAPENET ######################################
-
-
-class ShapeNetDataset:
-    def __init__(self, dataset_type, data_files, n_views_rendering):
-        self.dataset_type = dataset_type
-        self.data_files = data_files
-        self.n_views_rendering = n_views_rendering
-        self.data = []
-
-    def set_data(self):
-        for i in range(len(self.data_files)):
-            datum = self.get_datum(i)
-            self.data.extend(datum)
-
-        print('[INFO] %s Complete collecting saving images and volumes of dataset.' % (
-            dt.now()))
-
-    def get_datum(self, idx):
-        taxonomy_name = self.data_files[idx]["taxonomy_name"]
-        split_name = self.data_files[idx]["split_name"]
-        image_paths = self.data_files[idx]["image_paths"]
-        volume_path = self.data_files[idx]["volume_path"]
-
-        # get the image renderings
-        if self.dataset_type == DatasetType.TRAIN:
-            selected_rendering_paths = [
-                image_paths[i]
-                for i in random.sample(range(len(image_paths)), self.n_views_rendering)
-            ]
-        else:
-            selected_rendering_paths = [
-                image_paths[i] for i in range(self.n_views_rendering)]
-
-        images = []
-        for path in selected_rendering_paths:
-            img = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(
-                np.float32) / 255.
-
-            if len(img.shape) < 3:
-                print('[FATAL] %s It seems that there is something wrong with the image file %s' %
-                      (dt.now(), path))
-                sys.exit(2)
-
-            images.append(img)
-
-        # get the volume rendering
-        # ext = os.path.splitext(volume_path)[1]
-        # if ext == ".binvox":
-        with open(volume_path, 'rb') as f:
-            volume = utils.binvox_rw.read_as_3d_array(f)
-            volume = volume.data.astype(np.float32)
-
-        return (taxonomy_name, split_name, np.asarray(images), volume)
 
 
 class ShapeNetDataLoader:
@@ -80,13 +21,21 @@ class ShapeNetDataLoader:
         with open("datasets/ShapeNet.json", encoding='utf-8') as file:
             self.dataset_taxonomy = json.loads(file.read())
 
-    def load_dataset(self, dataset_type, n_views_rendering):
+    def load_dataset_files(self, dataset_type):
+        """
+        Loads the file paths for the dataset
+
+        :param dataset_type -- determines whether to parse the data for training, evalulation, or testing
+
+        :return -- the 
+        """
         data_files = []
 
+        # DELETE LATER (FOR TESTING)
         tax_shortened = [self.dataset_taxonomy[i] for i in range(3)]
 
         # load the data for each taxonomy (aka each category)
-        for taxonomy in tax_shortened:
+        for taxonomy in [self.dataset_taxonomy[0]]:
             folder_name = taxonomy["taxonomy_id"]
 
             print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' %
@@ -94,11 +43,11 @@ class ShapeNetDataLoader:
 
             splits = []
 
-            if dataset_type == DatasetType.TRAIN:
+            if dataset_type == "train":
                 splits = taxonomy["train"]
-            elif dataset_type == DatasetType.VAL:
+            elif dataset_type == "val":
                 splits = taxonomy["val"]
-            elif dataset_type == DatasetType.TEST:
+            elif dataset_type == "test":
                 splits = taxonomy["test"]
 
             # adds each of the taxonomy files to the list of data files
@@ -106,11 +55,20 @@ class ShapeNetDataLoader:
                 folder_name, splits)
             data_files.extend(taxonomy_files)
 
-            print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (
-                dt.now(), len(data_files)))
-        return ShapeNetDataset(dataset_type, data_files, n_views_rendering)
+        print('[INFO] %s Complete collecting files of the dataset. Total files: %d.' % (
+            dt.now(), len(data_files)))
+
+        return data_files
 
     def get_files_for_taxonomy(self, taxonomy_folder_name, splits):
+        """
+        Get the file paths for the taxonomies in the dataset
+
+        :param taxonomy_folder_name: the name of the taxonomy folder
+        :param splits: the splits in the taxonomy folder
+
+        :return: a list of the paths for the data files
+        """
         data_files = []
 
         for split in splits:
@@ -151,6 +109,61 @@ class ShapeNetDataLoader:
             })
 
         return data_files
+
+    def load_data(self, dataset_type, data_files, n_views_rendering):
+        """
+        Loads the image and volume data in the dataset.
+
+        :param dataset_type -- determines whether to parse the data for training, evalulation, or testing
+        :param data_files -- the files for each taxonomy in the dataset
+        :param n_views_rendering -- the number of view renderings
+
+        :return -- a list of the data for the taxonomies
+        """
+
+        data = []
+        for idx in range(len(data_files)):
+            taxonomy_name = data_files[idx]["taxonomy_name"]
+            split_name = data_files[idx]["split_name"]
+            image_paths = data_files[idx]["image_paths"]
+            volume_path = data_files[idx]["volume_path"]
+
+            # get the image renderings
+            if dataset_type == "train":
+                selected_rendering_paths = [
+                    image_paths[i]
+                    for i in random.sample(range(len(image_paths)), n_views_rendering)
+                ]
+            else:
+                selected_rendering_paths = [
+                    image_paths[i] for i in range(n_views_rendering)]
+
+            images = []
+            for path in selected_rendering_paths:
+                img = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype(
+                    np.float32) / 255.
+
+                if len(img.shape) < 3:
+                    print('[FATAL] %s It seems that there is something wrong with the image file %s' %
+                          (dt.now(), path))
+                    sys.exit(2)
+
+                # resizes the image to the proper size
+                img = tf.constant(img[:, :, :3])
+                img = tf.image.resize(img, [224, 224])
+
+                images.append(img)
+
+            with open(volume_path, 'rb') as f:
+                volume = utils.binvox_rw.read_as_3d_array(f)
+                volume = volume.data.astype(np.float32)
+
+            data.append((taxonomy_name, split_name,
+                        np.asarray(images), volume))
+
+        print('[INFO] %s Complete loading files of the dataset.' % (dt.now()))
+
+        return data
 
 
 ######################################################################################
