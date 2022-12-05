@@ -47,6 +47,6 @@ class Encoder(tf.keras.Model):
 
         image_features = tf.transpose(
             tf.stack(image_features), perm=[1, 0, 2, 3, 4])
-        # print("output feature shape: ", image_features.shape) # [batch size, n_views, 28, 28, 512]
+        # print("output feature shape: ", image_features.shape) # [batch size, n_views, 28, 28, 256]
 
         return image_features
