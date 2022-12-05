@@ -6,9 +6,9 @@ from models.decoder import Decoder
 
 
 class Pix2VoxModel(tf.keras.Model):
-    def __init__(self, use_refiner, **kwargs):
+    def __init__(self, cfg, **kwargs):
         super().__init__(**kwargs)
-        self.use_refiner = use_refiner
+        self.cfg = cfg
 
         self.encoder = Encoder()
         self.decoder = Decoder()
@@ -19,7 +19,9 @@ class Pix2VoxModel(tf.keras.Model):
         self.loss_function = loss
         self.accuracy_function = metrics[0]
 
-    def train(self, dataset, num_epochs, batch_size):
+    def train(self, dataset):
+        num_epochs = self.cfg.TRAIN.NUM_EPOCHES
+        batch_size = self.cfg.CONSTANT.BATCH_SIZE
         stats = []
         try:
             for epoch in range(num_epochs):

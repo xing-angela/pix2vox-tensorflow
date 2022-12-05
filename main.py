@@ -94,10 +94,11 @@ def main():
     train_data = (train_dataset.images, train_dataset.vols)
 
     ########################## TRAINING ##########################
-    model = Pix2VoxModel(use_refiner=False)
-    
+    model = Pix2VoxModel(cfg)
+
     if cfg.TASK.TASK_TYPE in ['train', 'both']:
-        model.train(train_data, cfg.TRAIN.NUM_EPOCHES, cfg.CONST.BATCH_SIZE)
+        model.train(train_data)
+
 
 if __name__ == '__main__':
     # Check python version
