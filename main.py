@@ -68,16 +68,16 @@ def main():
     if args.task in ["train", "both"]:
         train_data_loader = get_data(args)
 
-    augment_prep_fn = tf.keras.Sequential(
-        [
-            tf.keras.layers.RandomCrop(width=224, height=224),
-            tf.keras.layers.RandomFlip(),
-            tf.keras.layers.RandomRotation(factor=0.05)
-        ]
-    )
+    # augment_prep_fn = tf.keras.Sequential(
+    #     [
+    #         tf.keras.layers.RandomCrop(width=224, height=224),
+    #         tf.keras.layers.RandomFlip(),
+    #         tf.keras.layers.RandomRotation(factor=0.05)
+    #     ]
+    # )
 
     # sets up the model
-    model = Pix2VoxModel(args, augment_fn=augment_prep_fn)
+    model = Pix2VoxModel(args)
 
     compile_model(model, args)
 
