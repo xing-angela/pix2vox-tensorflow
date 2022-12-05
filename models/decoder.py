@@ -1,10 +1,9 @@
 import tensorflow as tf
 
 
-class Decoder(tf.keras.layers.Layer):
-    def __init__(self, args, **kwargs):
+class Decoder(tf.keras.Model):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.args = args
 
         # Layer Definition
         self.layer1 = tf.keras.models.Sequential([
