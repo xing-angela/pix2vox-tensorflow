@@ -8,26 +8,25 @@ class Decoder(tf.keras.Model):
         # Layer Definition
         self.layer1 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(
-                filters=512, kernel_size=4, strides=2, use_bias=True, padding='same', activation='relu'),
-            # pytorch: in_channels=2048, out_channels=512, bias=cfg.NETWORK.TCONV_USE_BIAS, padding=1, activation is not a parameter
+                filters=512, kernel_size=4, strides=2, use_bias=True, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU()
         ])
         self.layer2 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=128, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same', activation='relu'),
+                                            use_bias=True, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer3 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=32, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same', activation='relu'),
+                                            use_bias=True, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer4 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=8, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same', activation='relu'),
+                                            use_bias=True, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])

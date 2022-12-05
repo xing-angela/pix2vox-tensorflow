@@ -45,4 +45,4 @@ class Pix2VoxModel(tf.keras.Model):
             batch_vols = vols[start:end]
 
             image_features = self.encoder(batch_imgs)
-            raw_features, generated_volumes = self.decoder(image_features)
+            # raw_features, generated_volumes = self.decoder(image_features)
