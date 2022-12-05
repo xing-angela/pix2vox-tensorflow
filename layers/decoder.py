@@ -44,12 +44,18 @@ class Decoder(tf.keras.layers.Layer):
         raw_features = []
 
         for features in image_features:
-            gen_volume = tf.transpose(features, (-1, 2048, 2, 2, 2))
+            gen_volume = tf.reshape(features, (-1, 2048, 2, 2, 2))
+            print("reshape shape (batch_size, 2048, 2, 2, 2): ", gen_volume.shape)
             gen_volume = self.layer1(gen_volume)
+            print("layer 1 shape (batch_size, 512, 4, 4, 4): ", gen_volume.shape)
             gen_volume = self.layer2(gen_volume)
+            print("layer 2 shape (batch_size, 128, 8, 8, 8): ", gen_volume.shape)
             gen_volume = self.layer3(gen_volume)
+            print("layer 3 shape (batch_size, 32, 16, 16, 16): ", gen_volume.shape)
             gen_volume = self.layer4(gen_volume)
+            print("layer 4 shape (batch_size, 32, 16, 16, 16): ", gen_volume.shape)
             raw_feature = gen_volume
+            fuck
             gen_volume = self.layer5(gen_volume)
             raw_feature = tf.concat((raw_feature, gen_volume), axis=1)
 
