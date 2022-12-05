@@ -3,6 +3,7 @@ import tensorflow as tf
 from datetime import datetime as dt
 from models.encoder import Encoder
 from models.decoder import Decoder
+from models.merger import Merger
 
 
 class Pix2VoxModel(tf.keras.Model):
@@ -10,9 +11,9 @@ class Pix2VoxModel(tf.keras.Model):
         super().__init__(**kwargs)
         self.cfg = cfg
 
-        self.encoder = Encoder()
-        self.decoder = Decoder()
-        # self.merger = Merger()
+        self.encoder = Encoder(self.cfg)
+        self.decoder = Decoder(self.cfg)
+        self.merger = Merger(self.cfg)
 
     def compile(self, optimizer, loss, metrics):
         self.optimizer = optimizer
@@ -21,7 +22,7 @@ class Pix2VoxModel(tf.keras.Model):
 
     def train(self, dataset):
         num_epochs = self.cfg.TRAIN.NUM_EPOCHES
-        batch_size = self.cfg.CONSTANT.BATCH_SIZE
+        batch_size = self.cfg.CONST.BATCH_SIZE
         stats = []
         try:
             for epoch in range(num_epochs):
@@ -46,5 +47,10 @@ class Pix2VoxModel(tf.keras.Model):
             batch_imgs = imgs[start:end]
             batch_vols = vols[start:end]
 
-            image_features = self.encoder(batch_imgs)
-            raw_features, generated_volumes = self.decoder(image_features)
+            # Perform a forward pass to train the encoder, decoder, merger, and refiner (if using)
+            with tf.GradientTape() as tape:
+                image_features = self.encoder(batch_imgs)
+                raw_features, generated_volumes = self.decoder(image_features)
+
+                generated_volumes = self.merger(
+                    raw_features, generated_volumes)

@@ -2,37 +2,38 @@ import tensorflow as tf
 
 
 class Decoder(tf.keras.Model):
-    def __init__(self, **kwargs):
+    def __init__(self, cfg, **kwargs):
         super().__init__(**kwargs)
+        self.cfg = cfg
 
         # Layer Definition
         self.layer1 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv3DTranspose(
-                filters=512, kernel_size=4, strides=2, use_bias=True, padding='same'),
+            tf.keras.layers.Conv3DTranspose(filters=512, kernel_size=4, strides=2,
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU()
         ])
         self.layer2 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=128, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same'),
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer3 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=32, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same'),
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer4 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=8, kernel_size=4, strides=2,
-                                            use_bias=True, padding='same'),
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer5 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=1, kernel_size=1, strides=1,
-                                            use_bias=True, padding='valid', activation='sigmoid'),
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='valid', activation='sigmoid'),
         ])
 
     def call(self, image_features):

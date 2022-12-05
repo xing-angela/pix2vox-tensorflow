@@ -3,8 +3,9 @@ import numpy as np
 
 
 class Encoder(tf.keras.Model):
-    def __init__(self, **kwargs):
+    def __init__(self, cfg, **kwargs):
         super().__init__(**kwargs)
+        self.cfg = cfg
 
         # Layer Definition
         vgg16 = tf.keras.applications.vgg16.VGG16(

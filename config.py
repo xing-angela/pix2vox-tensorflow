@@ -70,6 +70,7 @@ __C.NETWORK.USE_MERGER = True
 #
 __C.TASK = edict()
 __C.TASK.TASK_TYPE = 'train'
+__C.TASK.MODEL_TYPE = 'F'
 
 #
 # Training
