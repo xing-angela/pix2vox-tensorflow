@@ -13,6 +13,7 @@ import multiprocessing as mp
 import numpy as np
 import os
 import sys
+import tensorflow as tf
 
 import utils.data_loaders
 from model import Pix2VoxModel
@@ -97,6 +98,8 @@ def main():
     model = Pix2VoxModel(cfg)
 
     if cfg.TASK.TASK_TYPE in ['train', 'both']:
+        model.compile(tf.keras.optimizers.Adam(),
+                      tf.keras.losses.BinaryCrossentropy())
         model.train(train_data)
 
 

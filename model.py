@@ -15,10 +15,10 @@ class Pix2VoxModel(tf.keras.Model):
         self.decoder = Decoder(self.cfg)
         self.merger = Merger(self.cfg)
 
-    def compile(self, optimizer, loss, metrics):
+    def compile(self, optimizer, loss):  # , metrics
         self.optimizer = optimizer
         self.loss_function = loss
-        self.accuracy_function = metrics[0]
+        # self.accuracy_function = metrics[0]
 
     def train(self, dataset):
         num_epochs = self.cfg.TRAIN.NUM_EPOCHES
@@ -28,7 +28,7 @@ class Pix2VoxModel(tf.keras.Model):
             for epoch in range(num_epochs):
                 print('[INFO] %s Epoch [%d/%d].' %
                       (dt.now(), epoch, num_epochs))
-                stats += [self.train_batch(dataset, batch_size)]
+                stats += [self.train_batch(dataset, batch_size, epoch)]
         except KeyboardInterrupt as e:
             if epoch > 0:
                 print(
@@ -38,10 +38,10 @@ class Pix2VoxModel(tf.keras.Model):
 
         return stats
 
-    def train_batch(self, dataset, batch_size):
+    def train_batch(self, dataset, batch_size, epoch_idx):
         imgs, vols = dataset[0], dataset[1]
 
-        for idx, end in enumerate(range(batch_size, len(imgs)+1, batch_size)):
+        for batch_idx, end in enumerate(range(batch_size, len(imgs)+1, batch_size)):
             # Get the current batch of data
             start = end - batch_size
             batch_imgs = imgs[start:end]
@@ -54,3 +54,15 @@ class Pix2VoxModel(tf.keras.Model):
 
                 generated_volumes = self.merger(
                     raw_features, generated_volumes)
+
+                encoder_loss = self.loss_function(
+                    generated_volumes, batch_vols) * 10
+
+            # update the weights based on the optimizer
+            grads = tape.gradient(encoder_loss, self.trainable_variables)
+            self.optimizer.apply_gradients(
+                zip(grads, self.trainable_variables))
+
+            print(
+                '[INFO] %s [Epoch %d/%d][Batch %d/%d] EDLoss = %.4f'
+                % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, len(imgs), encoder_loss))
