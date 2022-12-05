@@ -54,3 +54,4 @@ class Merger(tf.keras.layers.Layer):
         coarse_volumes = tf.math.reduce_sum(coarse_volumes, axis=1)
         
         return tf.clip_by_value(coarse_volumes, clip_value_min=0, clip_value_max=1)
+        #
