@@ -82,8 +82,8 @@ def main():
     compile_model(model, args)
 
     print('[INFO] %s Starting training for %d epochs with a batch size of %d.' % (
-        dt.now(), 250, 64))
-    model.train(250, 64, train_data_loader)
+        dt.now(), 250, 2))
+    model.train(250, 2, train_data_loader)
 
 
 def compile_model(model, args):
