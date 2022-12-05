@@ -53,3 +53,4 @@ class Refiner(tf.keras.layers.Layer):
         volumes_32_r = (volumes_32_l + self.layer8(volumes_16_r)) * 0.5
 
         return volumes_32_r.view((-1,32,32,32))
+#
