@@ -123,14 +123,15 @@ class Pix2VoxModel(tf.keras.Model):
             # IoU per sample
             sample_iou = []
             for th in self.cfg.TEST.VOXEL_THRESH:
-                # check if the fucking float() shit works and the fucking item() shit
                 _volume = tf.cast(tf.math.greater_equal(
                     generated_volume, th), tf.float32)
+                print("_volume: ", _volume)
                 intersection = tf.cast(tf.math.reduce_sum(
                     tf.math.multiply(_volume, batch_vols)), tf.float32)
+                print("intersection: ", intersection)
                 union = tf.cast(tf.math.greater_equal(
                     tf.math.add(_volume, batch_vols), 1), tf.float32)
-                # get rid of .item() shit
+                print("union: ", union)
                 sample_iou.append((intersection / union)[0])
 
             # IoU per taxonomy
