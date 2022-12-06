@@ -89,10 +89,13 @@ def main():
 
     train_dataset = train_dataset_loader.load_dataset_files(
         'train', cfg.CONST.N_VIEWS_RENDERING)
-    # val_dataset = val_dataset_loader.load_dataset_files(
-    #     'val', cfg.CONST.N_VIEWS_RENDERING)
+    val_dataset = val_dataset_loader.load_dataset_files(
+        'val', cfg.CONST.N_VIEWS_RENDERING)
 
-    train_data = (train_dataset.images, train_dataset.vols)
+    train_data = (train_dataset.images, train_dataset.vols,
+                  train_dataset.taxonomy_names, train_dataset.sample_names)
+    val_data = (val_dataset.images, val_dataset.vols,
+                val_dataset.taxonomy_names, val_dataset.sample_names)
 
     ########################## TRAINING ##########################
     model = Pix2VoxModel(cfg)
@@ -100,7 +103,7 @@ def main():
     if cfg.TASK.TASK_TYPE in ['train', 'both']:
         model.compile(tf.keras.optimizers.Adam(),
                       tf.keras.losses.BinaryCrossentropy())
-        model.train(train_data)
+        model.train(train_data, val_data)
 
 
 if __name__ == '__main__':

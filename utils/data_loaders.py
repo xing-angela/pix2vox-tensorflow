@@ -20,6 +20,8 @@ class ShapeNetDataset:
         self.file_list = files
         self.n_views_rendering = n_views_rendering
 
+        self.taxonomy_names = []
+        self.sample_names = []
         self.images = []
         self.vols = []
 
@@ -28,8 +30,12 @@ class ShapeNetDataset:
 
     def load_data(self):
         for file in self.file_list:
-            # taxonomy_name = file['taxonomy_name']
-            # split_name = file['split_name']
+            # Saves the taxonomy names and sample names
+            taxonomy_name = file['taxonomy_name']
+            sample_name = file['sample_name']
+            self.taxonomy_names.append(taxonomy_name)
+            self.sample_names.append(sample_name)
+
             image_paths = file['image_paths']
             volume_path = file['volume_path']
 
@@ -148,7 +154,7 @@ class ShapeNetDataLoader:
             # append the paths for the taxonomy to the output
             files_of_taxonomy.append({
                 'taxonomy_name': taxonomy_folder_name,
-                'split_name': sample_name,
+                'sample_name': sample_name,
                 'image_paths': img_paths,
                 'volume_path': vol_path
             })
