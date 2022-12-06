@@ -128,7 +128,7 @@ class Pix2VoxModel(tf.keras.Model):
                 print("_volume: ", _volume)
                 intersection = tf.cast(tf.math.reduce_sum(
                     tf.math.multiply(_volume, batch_vols)), tf.float32)
-                print("intersection: ", intersection)
+                print("imntersection: ", intersection)
                 union = tf.cast(tf.math.greater_equal(
                     tf.math.add(_volume, batch_vols), 1), tf.float32)
                 print("union: ", union)
