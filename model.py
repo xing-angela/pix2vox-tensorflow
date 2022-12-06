@@ -136,7 +136,7 @@ class Pix2VoxModel(tf.keras.Model):
             # IoU per taxonomy
             taxonomy_ids = dataset[2]
             taxonomy_id = taxonomy_ids[0] if isinstance(
-                taxonomy_id[0], str) else taxonomy_id[0][0]
+                taxonomy_ids[0], str) else taxonomy_ids[0][0]
             sample_ids = dataset[3]
             sample_name = sample_ids[0]
 
