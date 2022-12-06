@@ -146,6 +146,7 @@ class Pix2VoxModel(tf.keras.Model):
             test_iou[taxonomy_id]['iou'].append(sample_iou)
 
             # Print sample loss and IoU
+            print(sample_iou)
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f IoU = %s' %
                   (dt.now(), epoch_idx + 1, len(imgs), taxonomy_id, sample_name, encoder_loss, ['%.4f' % si for si in sample_iou]))
 
