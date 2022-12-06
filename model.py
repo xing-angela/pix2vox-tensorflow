@@ -34,7 +34,7 @@ class Pix2VoxModel(tf.keras.Model):
                 self.train_batch(train_dataset, batch_size, epoch)
 
                 # Validates the training model
-                iou = self.test(val_dataset)
+                iou = self.test(val_dataset, batch_size, epoch)
 
                 if iou > best_iou:
                     best_iou = iou
@@ -92,24 +92,20 @@ class Pix2VoxModel(tf.keras.Model):
                 '[INFO] %s [Epoch %d/%d][Batch %d/%d] EDLoss = %.4f'
                 % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, len(imgs) // batch_size, encoder_loss))
 
-    def test(self, dataset):
-        num_epochs = self.cfg.TRAIN.NUM_EPOCHES
-        batch_size = self.cfg.CONST.BATCH_SIZE
+    def test(self, dataset, batch_size, epoch_idx):
+        # Iterates through the batches
+        test_iou = self.test_batch(dataset, batch_size, epoch_idx)
 
-        for epoch in range(num_epochs):
-            # Iterates through the batches
-            test_iou = self.test_batch(dataset, batch_size, epoch)
+        # Output testing results
+        mean_iou = []
+        for taxonomy_id in test_iou:
+            test_iou[taxonomy_id]['iou'] = np.mean(
+                test_iou[taxonomy_id]['iou'], axis=0)
+            mean_iou.append(test_iou[taxonomy_id]['iou']
+                            * test_iou[taxonomy_id]['n_samples'])
+        mean_iou = np.sum(mean_iou, axis=0) / len(dataset[0])
 
-            # Output testing results
-            mean_iou = []
-            for taxonomy_id in test_iou:
-                test_iou[taxonomy_id]['iou'] = np.mean(
-                    test_iou[taxonomy_id]['iou'], axis=0)
-                mean_iou.append(test_iou[taxonomy_id]['iou']
-                                * test_iou[taxonomy_id]['n_samples'])
-            mean_iou = np.sum(mean_iou, axis=0) / len(dataset[0])
-
-            max_iou = np.max(mean_iou)
+        max_iou = np.max(mean_iou)
 
         return max_iou
 
