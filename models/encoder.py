@@ -28,6 +28,10 @@ class Encoder(tf.keras.Model):
             tf.keras.layers.ELU()
         ])
 
+        # Don't update params in VGG16
+        for layer in vgg16.layers[:12]:
+            layer.trainable = False
+
     def call(self, rendering_images):
         rendering_images = np.transpose(rendering_images, [1, 0, 2, 3, 4])
         rendering_images = np.split(rendering_images, 1, axis=0)

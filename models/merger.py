@@ -58,7 +58,7 @@ class Merger(tf.keras.Model):
 
         volume_weights = tf.transpose(
             tf.stack(volume_weights), (1, 0, 2, 3, 4))
-        volume_weights = tf.keras.activations.softmax(volume_weights)
+        volume_weights = tf.nn.softmax(volume_weights)
         # print("volume weights shape: ", volume_weights.shape) # [batch_size, n_views, 32, 32, 32]
         coarse_volumes = coarse_volumes * volume_weights
         coarse_volumes = tf.math.reduce_sum(coarse_volumes, axis=1)

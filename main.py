@@ -101,8 +101,12 @@ def main():
     model = Pix2VoxModel(cfg)
 
     if cfg.TASK.TASK_TYPE in ['train', 'both']:
-        model.compile(tf.keras.optimizers.Adam(),
-                      tf.keras.losses.BinaryCrossentropy())
+        model.compile(
+            tf.keras.optimizers.Adam(
+                learning_rate=cfg.TRAIN.LEARNING_RATE,
+                beta_1=cfg.TRAIN.BETAS[0],
+                beta_2=cfg.TRAIN.BETAS[1]),
+            tf.keras.losses.BinaryCrossentropy())
         model.train(train_data, val_data)
 
 

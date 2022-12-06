@@ -58,25 +58,39 @@ class Pix2VoxModel(tf.keras.Model):
             batch_vols = vols[start:end]
 
             # Perform a forward pass to train the encoder, decoder, merger, and refiner (if using)
+            # with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape, tf.GradientTape() as merger_tape:
             with tf.GradientTape() as tape:
                 image_features = self.encoder(batch_imgs)
-                raw_features, generated_volume = self.decoder(image_features)
+                raw_features, generated_volumes = self.decoder(image_features)
 
-                generated_volume = self.merger(
-                    raw_features, generated_volume)
+                generated_volumes = self.merger(
+                    raw_features, generated_volumes)
 
                 encoder_loss = self.loss_function(
-                    generated_volume, batch_vols) * 10
+                    batch_vols, generated_volumes) * 10
 
             # Update the weights based on the optimizer
             grads = tape.gradient(encoder_loss, self.trainable_variables)
+            # encoder_grads = encoder_tape.gradient(
+            #     encoder_loss, self.encoder.trainable_variables)
+            # decoder_grads = decoder_tape.gradient(
+            #     encoder_loss, self.decoder.trainable_variables)
+            # merger_grads = merger_tape.gradient(
+            #     encoder_loss, self.merger.trainable_variables)
+
+            # self.encoder_optimizer.apply_gradients(
+            #     zip(encoder_grads, self.encoder.trainable_variables))
+            # self.decoder_optimizer.apply_gradients(
+            #     zip(decoder_grads, self.decoder.trainable_variables))
+            # self.merger_optimizer.apply_gradients(
+            #     zip(merger_grads, self.merger.trainable_variables))
             self.optimizer.apply_gradients(
                 zip(grads, self.trainable_variables))
 
-            # Indicates the end of an epoch
+            # Indicates the end of an batch step
             print(
                 '[INFO] %s [Epoch %d/%d][Batch %d/%d] EDLoss = %.4f'
-                % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, len(imgs), encoder_loss))
+                % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, len(imgs) // batch_size, encoder_loss))
 
     def test(self, dataset):
         num_epochs = self.cfg.TRAIN.NUM_EPOCHES
@@ -97,7 +111,7 @@ class Pix2VoxModel(tf.keras.Model):
 
             max_iou = np.max(mean_iou)
 
-            return max_iou
+        return max_iou
 
     def test_batch(self, dataset, batch_size, epoch_idx):
         imgs, vols = dataset[0], dataset[1]
@@ -125,11 +139,11 @@ class Pix2VoxModel(tf.keras.Model):
             for th in self.cfg.TEST.VOXEL_THRESH:
                 _volume = tf.cast(tf.math.greater_equal(
                     generated_volume, th), tf.float32)
-                intersection = tf.cast(tf.math.reduce_sum(
-                    tf.math.multiply(_volume, batch_vols)), tf.float32)
-                union = tf.cast(tf.math.reduce_sum(tf.math.greater_equal(
-                    tf.math.add(_volume, batch_vols), 1)), tf.float32)
-                sample_iou.append((intersection / union)[0])
+                intersection = tf.math.reduce_sum(
+                    tf.math.multiply(_volume, batch_vols)).numpy()
+                union = tf.math.reduce_sum(tf.cast(tf.math.greater_equal(
+                    tf.math.add(_volume, batch_vols), 1), tf.float32)).numpy()
+                sample_iou.append((intersection / union))
 
             # IoU per taxonomy
             taxonomy_ids = dataset[2]
@@ -144,8 +158,7 @@ class Pix2VoxModel(tf.keras.Model):
             test_iou[taxonomy_id]['iou'].append(sample_iou)
 
             # Print sample loss and IoU
-            print(sample_iou)
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f IoU = %s' %
-                  (dt.now(), epoch_idx + 1, len(imgs), taxonomy_id, sample_name, encoder_loss, ['%.4f' % si for si in sample_iou]))
+                  (dt.now(), epoch_idx + 1, len(imgs) // batch_size, taxonomy_id, sample_name, encoder_loss, ['%.4f' % si for si in sample_iou]))
 
-            return test_iou
+        return test_iou
