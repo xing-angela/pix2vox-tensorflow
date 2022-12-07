@@ -12,18 +12,21 @@ class Encoder(tf.keras.Model):
             include_top=False, weights='imagenet')
         self.vgg = tf.keras.models.Sequential(vgg16.layers[:12])
         self.layer1 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(filters=512, kernel_size=3),
+            tf.keras.layers.Conv2D(
+                filters=512, kernel_size=3, kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ELU()
         ])
         self.layer2 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(filters=512, kernel_size=3),
+            tf.keras.layers.Conv2D(
+                filters=512, kernel_size=3, kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ELU(),
             tf.keras.layers.MaxPool2D(pool_size=(3, 3))
         ])
         self.layer3 = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(filters=256, kernel_size=1),
+            tf.keras.layers.Conv2D(
+                filters=256, kernel_size=1, kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ELU()
         ])

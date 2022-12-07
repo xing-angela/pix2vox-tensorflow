@@ -84,6 +84,7 @@ class Voxels(object):
     z = scale*z_n + translate[2]
 
     """
+
     def __init__(self, data, dims, translate, scale, axis_order):
         self.data = data
         self.dims = dims
@@ -199,7 +200,7 @@ def read_as_coord_array(fp, fix_coords=True):
         data = np.vstack((x, z, y))
         axis_order = 'xzy'
 
-    #return Voxels(data, dims, translate, scale, axis_order)
+    # return Voxels(data, dims, translate, scale, axis_order)
     return Voxels(np.ascontiguousarray(data), dims, translate, scale, axis_order)
 
 
@@ -208,13 +209,15 @@ def dense_to_sparse(voxel_data, dtype=np.int):
     No coordinate reordering.
     """
     if voxel_data.ndim != 3:
-        raise ValueError('[ERROR] voxel_data is wrong shape; should be 3D array.')
+        raise ValueError(
+            '[ERROR] voxel_data is wrong shape; should be 3D array.')
     return np.asarray(np.nonzero(voxel_data), dtype)
 
 
 def sparse_to_dense(voxel_data, dims, dtype=np.bool):
     if voxel_data.ndim != 2 or voxel_data.shape[0] != 3:
-        raise ValueError('[ERROR] voxel_data is wrong shape; should be 3xN array.')
+        raise ValueError(
+            '[ERROR] voxel_data is wrong shape; should be 3xN array.')
     if np.isscalar(dims):
         dims = [dims] * 3
     dims = np.atleast_2d(dims).T
@@ -228,11 +231,11 @@ def sparse_to_dense(voxel_data, dims, dtype=np.bool):
     return out
 
 
-#def get_linear_index(x, y, z, dims):
-#""" Assuming xzy order. (y increasing fastest.
-#TODO ensure this is right when dims are not all same
-#"""
-#return x*(dims[1]*dims[2]) + z*dims[1] + y
+# def get_linear_index(x, y, z, dims):
+# """ Assuming xzy order. (y increasing fastest.
+# TODO ensure this is right when dims are not all same
+# """
+# return x*(dims[1]*dims[2]) + z*dims[1] + y
 
 
 def write(voxel_model, fp):
@@ -246,7 +249,8 @@ def write(voxel_model, fp):
     """
     if voxel_model.data.ndim == 2:
         # TODO avoid conversion to dense
-        dense_voxel_data = sparse_to_dense(voxel_model.data, voxel_model.dims).astype(int)
+        dense_voxel_data = sparse_to_dense(
+            voxel_model.data, voxel_model.dims).astype(int)
     else:
         dense_voxel_data = voxel_model.data.astype(int)
 

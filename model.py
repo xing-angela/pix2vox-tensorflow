@@ -1,7 +1,10 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 from datetime import datetime as dt
+from tensorboardX import SummaryWriter
+import utils.network_utils
 from models.encoder import Encoder
 from models.decoder import Decoder
 from models.merger import Merger
@@ -15,41 +18,89 @@ class Pix2VoxModel(tf.keras.Model):
         self.encoder = Encoder(self.cfg)
         self.decoder = Decoder(self.cfg)
         self.merger = Merger(self.cfg)
+        self.refiner = None
 
-    def compile(self, optimizer, loss):  # , metrics
+    def compile(self, optimizer, loss):
         self.optimizer = optimizer
         self.loss_function = loss
-        # self.accuracy_function = metrics[0]
+
+    ###################################### TESTING ######################################
 
     def train(self, train_dataset, val_dataset):
+        '''
+        Trains the model.
+
+        :param train_dataset -- the training dataset which is a tuple of images, volumes, taxonomy names,
+            and sample names
+        :param val_dataset -- the evaluation dataset which is a tuple of images, volumes, taxonomy names, 
+            and sample names
+        '''
+
+        # Set up the Tensorboard writer
+        output_dir = os.path.join(
+            self.cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+        log_dir = output_dir % 'logs'
+        ckpt_dir = output_dir % 'checkpoints'
+        train_writer = SummaryWriter(os.path.join(log_dir, 'train'))
+        val_writer = SummaryWriter(os.path.join(log_dir, 'test'))
+
+        # Sets up the encoder, decoder, merger, and refiner
+        # self.encoder = Encoder(self.cfg)
+        # self.decode = Decoder(self.cfg)
+        # self.merger = Merger(self.cfg)
+        # SET UP THE REFINER
+
         num_epochs = self.cfg.TRAIN.NUM_EPOCHES
         batch_size = self.cfg.CONST.BATCH_SIZE
         best_iou = -1
-        try:
-            for epoch in range(num_epochs):
-                print('[INFO] %s Epoch [%d/%d].' %
-                      (dt.now(), epoch, num_epochs))
 
-                # Iterates through the batches
-                self.train_batch(train_dataset, batch_size, epoch)
+        # Training loop -- goes through each epoch
+        for epoch in range(num_epochs):
+            # Sets up the batch average metrics
+            encoder_losses = utils.network_utils.AverageMeter()
+            refiner_losses = utils.network_utils.AverageMeter()
 
-                # Validates the training model
-                iou = self.test(val_dataset, batch_size, epoch)
+            print('[INFO] %s Epoch [%d/%d].' % (dt.now(), epoch, num_epochs))
 
-                if iou > best_iou:
-                    best_iou = iou
+            # Iterates through the batches
+            self.train_batch(train_dataset, batch_size, epoch,
+                             train_writer, (encoder_losses, refiner_losses))
 
-        except KeyboardInterrupt as e:
-            if epoch > 0:
-                print(
-                    "Key-value interruption. Trying to early-terminate. Interrupt again to not do that!")
-            else:
-                raise e
+            # Append epoch loss to TensorBoard
+            train_writer.add_scalar(
+                'EncoderDecoder/EpochLoss', encoder_losses.avg, epoch + 1)
+            train_writer.add_scalar(
+                'Refiner/EpochLoss', refiner_losses.avg, epoch + 1)
 
-        # return stats
+            # Validates the training model
+            iou = self.test(val_dataset, epoch, output_dir, val_writer)
 
-    def train_batch(self, train_dataset, batch_size, epoch_idx):
+            # Supposed to save model here, but not sure how to do that :(
+
+            if iou > best_iou:
+                best_iou = iou
+
+            # Close SummaryWriter for TensorBoard
+            train_writer.close()
+            val_writer.close()
+
+    def train_batch(self, train_dataset, batch_size, epoch_idx, writer, loss_meters):
+        '''
+        Trains a single batch.
+
+        :param train_dataset -- the training dataset which is a tuple of images, volumes, taxonomy names,
+            and sample names
+        :param batch size -- the batch size
+        :param epoch_idx -- the current epoch number (for logging purposes)
+        :param writer -- the tensorboard SummaryWriter for training
+        :param loss_meters -- the loss meters which is a tuple of the encoder loss meter and the refier 
+            loss meter
+        '''
+
         imgs, vols = train_dataset[0], train_dataset[1]
+        encoder_losses, refiner_losses = loss_meters[0], loss_meters[1]
+
+        num_batches = len(imgs) // batch_size
 
         for batch_idx, end in enumerate(range(batch_size, len(imgs)+1, batch_size)):
             # Get the current batch of data
@@ -58,10 +109,10 @@ class Pix2VoxModel(tf.keras.Model):
             batch_vols = vols[start:end]
 
             # Perform a forward pass to train the encoder, decoder, merger, and refiner (if using)
-            # with tf.GradientTape() as encoder_tape, tf.GradientTape() as decoder_tape, tf.GradientTape() as merger_tape:
             with tf.GradientTape() as tape:
                 image_features = self.encoder(batch_imgs)
-                raw_features, generated_volumes = self.decoder(image_features)
+                raw_features, generated_volumes = self.decoder(
+                    image_features)
 
                 generated_volumes = self.merger(
                     raw_features, generated_volumes)
@@ -71,30 +122,45 @@ class Pix2VoxModel(tf.keras.Model):
 
             # Update the weights based on the optimizer
             grads = tape.gradient(encoder_loss, self.trainable_variables)
-            # encoder_grads = encoder_tape.gradient(
-            #     encoder_loss, self.encoder.trainable_variables)
-            # decoder_grads = decoder_tape.gradient(
-            #     encoder_loss, self.decoder.trainable_variables)
-            # merger_grads = merger_tape.gradient(
-            #     encoder_loss, self.merger.trainable_variables)
-
-            # self.encoder_optimizer.apply_gradients(
-            #     zip(encoder_grads, self.encoder.trainable_variables))
-            # self.decoder_optimizer.apply_gradients(
-            #     zip(decoder_grads, self.decoder.trainable_variables))
-            # self.merger_optimizer.apply_gradients(
-            #     zip(merger_grads, self.merger.trainable_variables))
             self.optimizer.apply_gradients(
                 zip(grads, self.trainable_variables))
 
             # Indicates the end of an batch step
             print(
                 '[INFO] %s [Epoch %d/%d][Batch %d/%d] EDLoss = %.4f'
-                % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, len(imgs) // batch_size, encoder_loss))
+                % (dt.now(), epoch_idx + 1, self.cfg.TRAIN.NUM_EPOCHES, batch_idx + 1, num_batches, encoder_loss))
 
-    def test(self, dataset, batch_size, epoch_idx):
+            # Append loss to average metrics
+            encoder_losses.update(encoder_loss.numpy())
+            # refiner_losses.update(refiner_loss.numpy())
+
+            # Append loss to TensorBoard
+            n_itr = epoch_idx * num_batches + batch_idx
+            writer.add_scalar(
+                'EncoderDecoder/BatchLoss', encoder_loss.numpy(), n_itr)
+            # writer.add_scalar(
+            #     'Refiner/BatchLoss', refiner_loss.numpy(), n_itr)
+
+    ###################################### TESTING ######################################
+
+    def test(self, dataset, epoch_idx, output_dir, writer=None):
+        '''
+        Tests the model.
+
+        :param dataset -- the testing dataset which is a tuple of images, volumes, taxonomy names,
+            and sample names
+        :param epoch_idx -- the current epoch number (for logging purposes)
+        :param output_dir -- the output directory for testing
+        :param writer -- the tensorboard SummaryWriter, will default to None for testing and will 
+            need input for evaluation
+        '''
+
+        encoder_losses = utils.network_utils.AverageMeter()
+        refiner_losses = utils.network_utils.AverageMeter()
+
         # Iterates through the batches
-        test_iou = self.test_batch(dataset, batch_size, epoch_idx)
+        test_iou = self.test_batch(
+            dataset, 1, epoch_idx, writer, (encoder_losses, refiner_losses), output_dir)
 
         # Output testing results
         mean_iou = []
@@ -104,13 +170,35 @@ class Pix2VoxModel(tf.keras.Model):
             mean_iou.append(test_iou[taxonomy_id]['iou']
                             * test_iou[taxonomy_id]['n_samples'])
         mean_iou = np.sum(mean_iou, axis=0) / len(dataset[0])
-
         max_iou = np.max(mean_iou)
+
+        # Add testing results to TensorBoard
+        max_iou = np.max(mean_iou)
+        if writer is not None:
+            writer.add_scalar('EncoderDecoder/EpochLoss',
+                              encoder_losses.avg, epoch_idx)
+            # writer.add_scalar('Refiner/EpochLoss',
+            #                   refiner_losses.avg, epoch_idx)
+            writer.add_scalar('Refiner/IoU', max_iou, epoch_idx)
 
         return max_iou
 
-    def test_batch(self, dataset, batch_size, epoch_idx):
+    def test_batch(self, dataset, batch_size, epoch_idx, writer, loss_meters, output_dir):
+        '''
+        Tests a single batch.
+
+        :param dataset -- the testing dataset which is a tuple of images, volumes, taxonomy names,
+            and sample names
+        :param batch size -- the batch size
+        :param epoch_idx -- the current epoch number (for logging purposes)
+        :param writer -- the tensorboard SummaryWriter, will default to None for testing and will 
+            need input for evaluation
+        :param loss_meters -- the loss meters which is a tuple of the encoder loss meter and the refier 
+            loss meter
+        :param output_dir -- the output directory for testing
+        '''
         imgs, vols = dataset[0], dataset[1]
+        encoder_losses, refiner_losses = loss_meters[0], loss_meters[1]
 
         test_iou = dict()
 
@@ -129,6 +217,10 @@ class Pix2VoxModel(tf.keras.Model):
 
             encoder_loss = self.loss_function(
                 generated_volume, batch_vols) * 10
+
+            # Append loss to average metrics
+            encoder_losses.update(encoder_loss.numpy())
+            # refiner_losses.update(refiner_loss.numpy())
 
             # IoU per sample
             sample_iou = []
@@ -152,6 +244,21 @@ class Pix2VoxModel(tf.keras.Model):
                 test_iou[taxonomy_id] = {'n_samples': 0, 'iou': []}
             test_iou[taxonomy_id]['n_samples'] += 1
             test_iou[taxonomy_id]['iou'].append(sample_iou)
+
+            # Append generated volumes to TensorBoard
+            if output_dir and batch_idx < 3:
+                img_dir = output_dir % 'images'
+                # Volume Visualization
+                gv = generated_volume.numpy()
+                rendering_views = utils.network_utils.save_volume(gv, os.path.join(img_dir, 'test'),
+                                                                  epoch_idx)
+                writer.add_image('Test Sample#%02d/Volume Reconstructed' %
+                                 batch_idx, rendering_views, epoch_idx)
+                gtv = batch_vols.numpy()
+                rendering_views = utils.network_utils.save_volume(gtv, os.path.join(img_dir, 'test'),
+                                                                  epoch_idx)
+                writer.add_image('Test Sample#%02d/Volume GroundTruth' %
+                                 batch_idx, rendering_views, epoch_idx)
 
             # Print sample loss and IoU
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f IoU = %s' %
