@@ -9,7 +9,7 @@ class Decoder(tf.keras.Model):
         # Layer Definition
         self.layer1 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=512, kernel_size=4, strides=2,
-                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same',
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS,  padding='same',
                                             kernel_initializer='he_normal',
                                             ),
             tf.keras.layers.BatchNormalization(),
@@ -17,21 +17,21 @@ class Decoder(tf.keras.Model):
         ])
         self.layer2 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=128, kernel_size=4, strides=2,
-                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same',
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS,  padding='same',
                                             kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer3 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=32, kernel_size=4, strides=2,
-                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same',
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS,  padding='same',
                                             kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
         ])
         self.layer4 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3DTranspose(filters=8, kernel_size=4, strides=2,
-                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS, padding='same',
+                                            use_bias=cfg.NETWORK.TCONV_USE_BIAS,  padding='same',
                                             kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),

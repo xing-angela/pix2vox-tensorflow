@@ -9,31 +9,36 @@ class Merger(tf.keras.Model):
         # Layer Definition
         self.layer1 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3D(
-                filters=16, kernel_size=3, padding='same', kernel_initializer='he_normal'),
+                filters=16, kernel_size=3, padding='same',
+                kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.LeakyReLU(alpha=cfg.NETWORK.LEAKY_VALUE)
         ])
         self.layer2 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3D(
-                filters=8, kernel_size=3, padding='same', kernel_initializer='he_normal'),
+                filters=8, kernel_size=3, padding='same',
+                kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.LeakyReLU(alpha=cfg.NETWORK.LEAKY_VALUE)
         ])
         self.layer3 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3D(
-                filters=4, kernel_size=3, padding='same', kernel_initializer='he_normal'),
+                filters=4, kernel_size=3, padding='same',
+                kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.LeakyReLU(alpha=cfg.NETWORK.LEAKY_VALUE)
         ])
         self.layer4 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3D(
-                filters=2, kernel_size=3, padding='same', kernel_initializer='he_normal'),
+                filters=2, kernel_size=3, padding='same',
+                kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.LeakyReLU(alpha=cfg.NETWORK.LEAKY_VALUE)
         ])
         self.layer5 = tf.keras.models.Sequential([
             tf.keras.layers.Conv3D(
-                filters=1, kernel_size=3, padding='same', kernel_initializer='he_normal'),
+                filters=1, kernel_size=3, padding='same',
+                kernel_initializer='he_normal'),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.LeakyReLU(alpha=cfg.NETWORK.LEAKY_VALUE)
         ])

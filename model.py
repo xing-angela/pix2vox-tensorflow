@@ -110,12 +110,12 @@ class Pix2VoxModel(tf.keras.Model):
 
             # Perform a forward pass to train the encoder, decoder, merger, and refiner (if using)
             with tf.GradientTape() as tape:
-                image_features = self.encoder(batch_imgs)
+                image_features = self.encoder(batch_imgs, training=True)
                 raw_features, generated_volumes = self.decoder(
-                    image_features)
+                    image_features, training=True)
 
                 generated_volumes = self.merger(
-                    raw_features, generated_volumes)
+                    raw_features, generated_volumes, training=True)
 
                 encoder_loss = self.loss_function(
                     batch_vols, generated_volumes) * 10
@@ -209,11 +209,12 @@ class Pix2VoxModel(tf.keras.Model):
             batch_vols = vols[start:end]
 
             # Perform a no-training forward pass to train the encoder, decoder, merger, and refiner (if using)
-            image_features = self.encoder(batch_imgs)
-            raw_features, generated_volume = self.decoder(image_features)
+            image_features = self.encoder(batch_imgs, training=False)
+            raw_features, generated_volume = self.decoder(
+                image_features, training=False)
 
             generated_volume = self.merger(
-                raw_features, generated_volume)
+                raw_features, generated_volume, training=False)
 
             encoder_loss = self.loss_function(
                 generated_volume, batch_vols) * 10
@@ -249,19 +250,19 @@ class Pix2VoxModel(tf.keras.Model):
             if output_dir and batch_idx < 3:
                 img_dir = output_dir % 'images'
                 # Volume Visualization
-                gv = generated_volume.numpy()
+                gv = generated_volume.cpu().numpy()
                 rendering_views = utils.network_utils.save_volume(gv, os.path.join(img_dir, 'test'),
                                                                   epoch_idx)
-                writer.add_image('Test Sample#%02d/Volume Reconstructed' %
-                                 batch_idx, rendering_views, epoch_idx)
-                gtv = batch_vols.numpy()
+                # writer.add_image('Test Sample#%02d/Volume Reconstructed' %
+                #                  batch_idx, rendering_views, epoch_idx)
+                gtv = batch_vols
                 rendering_views = utils.network_utils.save_volume(gtv, os.path.join(img_dir, 'test'),
                                                                   epoch_idx)
-                writer.add_image('Test Sample#%02d/Volume GroundTruth' %
-                                 batch_idx, rendering_views, epoch_idx)
+                # writer.add_image('Test Sample#%02d/Volume GroundTruth' %
+                #                  batch_idx, rendering_views, epoch_idx)
 
             # Print sample loss and IoU
             print('[INFO] %s Test[%d/%d] Taxonomy = %s Sample = %s EDLoss = %.4f IoU = %s' %
-                  (dt.now(), epoch_idx + 1, len(imgs) // batch_size, taxonomy_id, sample_name, encoder_loss, ['%.4f' % si for si in sample_iou]))
+                  (dt.now(), batch_idx + 1, len(imgs) // batch_size, taxonomy_id, sample_name, encoder_loss, ['%.4f' % si for si in sample_iou]))
 
         return test_iou
