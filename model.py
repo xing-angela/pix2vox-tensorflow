@@ -60,7 +60,7 @@ class Pix2VoxModel(tf.keras.Model):
             encoder_losses = utils.network_utils.AverageMeter()
             refiner_losses = utils.network_utils.AverageMeter()
 
-            print('[INFO] %s Epoch [%d/%d].' % (dt.now(), epoch, num_epochs))
+            print('[INFO] %s Epoch [%d/%d].' % (dt.now(), epoch+1, num_epochs))
 
             # Iterates through the batches
             self.train_batch(train_dataset, batch_size, epoch,
@@ -76,7 +76,6 @@ class Pix2VoxModel(tf.keras.Model):
             iou = self.test(val_dataset, epoch, output_dir, val_writer)
 
             # Supposed to save model here, but not sure how to do that :(
-
             if iou > best_iou:
                 best_iou = iou
 
@@ -173,7 +172,6 @@ class Pix2VoxModel(tf.keras.Model):
         max_iou = np.max(mean_iou)
 
         # Add testing results to TensorBoard
-        max_iou = np.max(mean_iou)
         if writer is not None:
             writer.add_scalar('EncoderDecoder/EpochLoss',
                               encoder_losses.avg, epoch_idx)
@@ -251,13 +249,13 @@ class Pix2VoxModel(tf.keras.Model):
                 img_dir = output_dir % 'images'
                 # Volume Visualization
                 gv = generated_volume.cpu().numpy()
-                rendering_views = utils.network_utils.save_volume(gv, os.path.join(img_dir, 'test'),
-                                                                  epoch_idx)
+                rendering_views = utils.network_utils.save_volume(gv, os.path.join(img_dir, 'test', 'epoch_%d' % epoch_idx),
+                                                                  batch_idx)
                 # writer.add_image('Test Sample#%02d/Volume Reconstructed' %
                 #                  batch_idx, rendering_views, epoch_idx)
                 gtv = batch_vols
-                rendering_views = utils.network_utils.save_volume(gtv, os.path.join(img_dir, 'test'),
-                                                                  epoch_idx)
+                rendering_views = utils.network_utils.save_volume(gtv, os.path.join(img_dir, 'ground_truth', 'epoch_%d' % epoch_idx),
+                                                                  batch_idx)
                 # writer.add_image('Test Sample#%02d/Volume GroundTruth' %
                 #                  batch_idx, rendering_views, epoch_idx)
 

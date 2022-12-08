@@ -136,12 +136,16 @@ class ShapeNetDataLoader:
                 self.image_path, taxonomy_folder_name, sample_name, 'rendering')
             views = sorted(os.listdir(img_file_path))
             # the folder also contains rendering.txt and metadata (which we don't want)
-            views = views[:len(views)-2]
+            # views = views[:len(views)-2]
 
             for view in views:
-                curr_file_path = os.path.join(
-                    self.image_path, taxonomy_folder_name, sample_name, 'rendering', view)
-                if not os.path.exists(curr_file_path):
+                try:
+                    int(view[0])
+                    curr_file_path = os.path.join(
+                        self.image_path, taxonomy_folder_name, sample_name, 'rendering', view)
+                    if not os.path.exists(curr_file_path):
+                        continue
+                except ValueError:
                     continue
 
                 img_paths.append(curr_file_path)
