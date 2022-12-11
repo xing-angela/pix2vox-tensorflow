@@ -20,11 +20,11 @@ __C.DATASETS.SHAPENET.VOXEL_PATH = 'datasets/ShapeNet/ShapeNetVox32'
 # __C.DATASETS.PASCAL3D.ANNOTATION_PATH       = '/home/hzxie/Datasets/PASCAL3D/Annotations/%s_imagenet/%s.mat'
 # __C.DATASETS.PASCAL3D.RENDERING_PATH        = '/home/hzxie/Datasets/PASCAL3D/Images/%s_imagenet/%s.JPEG'
 # __C.DATASETS.PASCAL3D.VOXEL_PATH            = '/home/hzxie/Datasets/PASCAL3D/CAD/%s/%02d.binvox'
-# __C.DATASETS.PIX3D                          = edict()
-# __C.DATASETS.PIX3D.TAXONOMY_FILE_PATH       = './datasets/Pix3D.json'
-# __C.DATASETS.PIX3D.ANNOTATION_PATH          = '/home/hzxie/Datasets/Pix3D/pix3d.json'
-# __C.DATASETS.PIX3D.RENDERING_PATH           = '/home/hzxie/Datasets/Pix3D/img/%s/%s.%s'
-# __C.DATASETS.PIX3D.VOXEL_PATH               = '/home/hzxie/Datasets/Pix3D/model/%s/%s/%s.binvox'
+# __C.DATASETS.PIX3D = edict()
+# __C.DATASETS.PIX3D.TAXONOMY_FILE_PATH = './datasets/Pix3D.json'
+# __C.DATASETS.PIX3D.ANNOTATION_PATH = 'datasets/Pix3D/pix3d.json'
+# __C.DATASETS.PIX3D.RENDERING_PATH = 'datasets/Pix3D/img/%s/%s.%s'
+# __C.DATASETS.PIX3D.VOXEL_PATH = 'datasets/Pix3D/model/%s/%s/%s.binvox'
 
 #
 # Dataset
@@ -32,8 +32,8 @@ __C.DATASETS.SHAPENET.VOXEL_PATH = 'datasets/ShapeNet/ShapeNetVox32'
 __C.DATASET = edict()
 __C.DATASET.MEAN = [0.5, 0.5, 0.5]
 __C.DATASET.STD = [0.5, 0.5, 0.5]
-__C.DATASET.TRAIN_DATASET = 'ShapeNet'
-__C.DATASET.TEST_DATASET = 'ShapeNet'
+__C.DATASET.TRAIN_DATASET = 'ShapeNet'  # 'Pix3D'
+__C.DATASET.TEST_DATASET = 'ShapeNet'  # 'Pix3D'
 
 #
 # Common
@@ -69,8 +69,7 @@ __C.NETWORK.USE_MERGER = True
 # Task
 #
 __C.TASK = edict()
-__C.TASK.TASK_TYPE = 'train'
-__C.TASK.MODEL_TYPE = 'F'
+__C.TASK.MODEL_TYPE = 'F'  # 'A'
 
 #
 # Training
@@ -78,7 +77,7 @@ __C.TASK.MODEL_TYPE = 'F'
 __C.TRAIN = edict()
 __C.TRAIN.RESUME_TRAIN = False
 __C.TRAIN.NUM_WORKER = 4             # number of data workers
-__C.TRAIN.NUM_EPOCHES = 250
+__C.TRAIN.NUM_EPOCHES = 100  # originally set to 250
 __C.TRAIN.BRIGHTNESS = .4
 __C.TRAIN.CONTRAST = .4
 __C.TRAIN.SATURATION = .4
@@ -88,10 +87,6 @@ __C.TRAIN.POLICY = 'adam'        # available options: sgd, adam
 __C.TRAIN.EPOCH_START_USE_REFINER = 0
 __C.TRAIN.EPOCH_START_USE_MERGER = 0
 __C.TRAIN.LEARNING_RATE = 1e-3
-# __C.TRAIN.ENCODER_LEARNING_RATE = 1e-3
-# __C.TRAIN.DECODER_LEARNING_RATE = 1e-3
-# __C.TRAIN.REFINER_LEARNING_RATE = 1e-3
-# __C.TRAIN.MERGER_LEARNING_RATE = 1e-4
 __C.TRAIN.ENCODER_LR_MILESTONES = [150]
 __C.TRAIN.DECODER_LR_MILESTONES = [150]
 __C.TRAIN.REFINER_LR_MILESTONES = [150]

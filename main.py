@@ -17,6 +17,7 @@ import tensorflow as tf
 
 import utils.data_loaders
 from model import Pix2VoxModel
+from tensorboardX import SummaryWriter
 
 # Fix problem: no $DISPLAY environment variable
 matplotlib.use('Agg')
@@ -24,19 +25,6 @@ matplotlib.use('Agg')
 
 def parse_args():
     parser = ArgumentParser(description='Parser of Runner of Pix2Vox')
-    # parser.add_argument('--gpu',
-    #                     dest='gpu_id',
-    #                     help='GPU device id to use [cuda0]',
-    #                     default=cfg.CONST.DEVICE,
-    #                     type=str)
-    # parser.add_argument('--rand', dest='randomize',
-    #                     help='Randomize (do not use a fixed seed)', action='store_true')
-    # parser.add_argument('--test', dest='test',
-    #                     help='Test neural networks', action='store_true')
-    parser.add_argument('--task', dest='task',
-                        choices=['train', 'test', 'both'],
-                        help='training, testing, or both',
-                        default=cfg.TASK.TASK_TYPE)
     parser.add_argument('--batch-size',
                         dest='batch_size',
                         help='name of the net',
@@ -56,10 +44,6 @@ def main():
     # Get args from command line
     args = parse_args()
 
-    # if args.gpu_id is not None:
-    #     cfg.CONST.DEVICE = args.gpu_id
-    # if not args.randomize:
-    #     np.random.seed(cfg.CONST.RNG_SEED)
     if args.task is not None:
         cfg.TASK.TASK_TYPE = args.task
     if args.batch_size is not None:
@@ -77,37 +61,47 @@ def main():
     print('Use config:')
     pprint(cfg)
 
-    # Set GPU to use
-    # if type(cfg.CONST.DEVICE) == str:
-    #     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.CONST.DEVICE
-
     ######################## DATA LOADING ########################
     train_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TRAIN_DATASET](
         cfg)
     val_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](
+        cfg)
+    test_dataset_loader = utils.data_loaders.DATASET_LOADER_MAPPING[cfg.DATASET.TEST_DATASET](
         cfg)
 
     train_dataset = train_dataset_loader.load_dataset_files(
         'train', cfg.CONST.N_VIEWS_RENDERING)
     val_dataset = val_dataset_loader.load_dataset_files(
         'val', cfg.CONST.N_VIEWS_RENDERING)
+    test_dataset = test_dataset_loader.load_dataset_files(
+        'test', cfg.CONST.N_VIEWS_RENDERING)
 
     train_data = (train_dataset.images, train_dataset.vols,
                   train_dataset.taxonomy_names, train_dataset.sample_names)
     val_data = (val_dataset.images, val_dataset.vols,
                 val_dataset.taxonomy_names, val_dataset.sample_names)
+    test_data = (test_dataset.images, test_dataset.vols,
+                 test_dataset.taxonomy_names, test_dataset.sample_names)
 
     ########################## TRAINING ##########################
     model = Pix2VoxModel(cfg)
 
-    if cfg.TASK.TASK_TYPE in ['train', 'both']:
-        model.compile(
-            tf.keras.optimizers.Adam(
-                learning_rate=cfg.TRAIN.LEARNING_RATE,
-                beta_1=cfg.TRAIN.BETAS[0],
-                beta_2=cfg.TRAIN.BETAS[1]),
-            tf.keras.losses.BinaryCrossentropy())
-        model.train(train_data, val_data)
+    model.compile(
+        tf.keras.optimizers.Adam(
+            learning_rate=cfg.TRAIN.LEARNING_RATE,
+            beta_1=cfg.TRAIN.BETAS[0],
+            beta_2=cfg.TRAIN.BETAS[1]),
+        tf.keras.losses.BinaryCrossentropy())
+
+    # trains the model
+    model.train(train_data, val_data)
+
+    # tests the model
+    output_dir = os.path.join(
+        cfg.DIR.OUT_PATH, '%s', dt.now().isoformat())
+    log_dir = output_dir % 'logs'
+    test_writer = SummaryWriter(os.path.join(log_dir, 'evaluation'))
+    model.test(test_data, -1, output_dir, test_writer)
 
 
 if __name__ == '__main__':
