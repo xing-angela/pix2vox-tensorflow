@@ -44,8 +44,6 @@ def main():
     # Get args from command line
     args = parse_args()
 
-    if args.task is not None:
-        cfg.TASK.TASK_TYPE = args.task
     if args.batch_size is not None:
         cfg.CONST.BATCH_SIZE = args.batch_size
     if args.epoch is not None:
