@@ -13,8 +13,8 @@ We used [Anaconda](https://www.anaconda.com/products/individual) to set up the e
 git clone https://github.com/xing-angela/dl-final-pix2vox.git
 cd mipnerf
 
-# Create the conda environment using tensorflow 2.4.1
-conda create --name pix2vox_env tensorflow=2.4.1
+# Create the conda environment
+conda create --name pix2vox_env
 conda activate pix2vox_env
 
 # Prepare pip
