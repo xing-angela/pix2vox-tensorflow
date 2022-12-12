@@ -6,3 +6,4 @@ opencv-python
 print
 scipy
 tensorboardX
+tensorflow-gpu
