@@ -32,8 +32,6 @@ def parse_args():
                         type=int)
     parser.add_argument('--epoch', dest='epoch', help='number of epoches',
                         default=cfg.TRAIN.NUM_EPOCHES, type=int)
-    parser.add_argument('--weights', dest='weights',
-                        help='Initialize network from the weights file', default=None)
     parser.add_argument('--out', dest='out_path',
                         help='Set output path', default=cfg.DIR.OUT_PATH)
     args = parser.parse_args()
@@ -50,10 +48,6 @@ def main():
         cfg.TRAIN.NUM_EPOCHES = args.epoch
     if args.out_path is not None:
         cfg.DIR.OUT_PATH = args.out_path
-    if args.weights is not None:
-        cfg.CONST.WEIGHTS = args.weights
-        if not args.test:
-            cfg.TRAIN.RESUME_TRAIN = True
 
     # Print config
     print('Use config:')
