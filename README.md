@@ -1,5 +1,5 @@
 # Pix2Vox - Tensorflow
-This respository contains TensorFlow version of the code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153). The code is based of the original code which is foun [here](https://github.com/hzxie/Pix2Vox). 
+This respository contains TensorFlow version of the code for the paper [Pix2Vox: Context-aware 3D Reconstruction from Single and Multi-view Images](https://arxiv.org/abs/1901.11153). The code is based of the original code which is found [here](https://github.com/hzxie/Pix2Vox). 
 
 ## Datasets
 We used the [ShapeNet](https://www.shapenet.org/), which is available below:
