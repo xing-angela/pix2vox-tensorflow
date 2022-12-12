@@ -91,7 +91,9 @@ class ShapeNetDataLoader:
         files = []
 
         # Load data for each category
-        for taxonomy in [self.dataset_taxonomy[0]]:  # 4 for chair
+        # 0 for plane # 1 for bench # 2 for cabinet # 3 for car # 4 for chair
+        # 6 for lamp # 8 for rifle # 9 for sofa # 11 for telephone
+        for taxonomy in [self.dataset_taxonomy[0]]:
             taxonomy_folder_name = taxonomy['taxonomy_id']
             print('[INFO] %s Collecting files of Taxonomy[ID=%s, Name=%s]' %
                   (dt.now(), taxonomy['taxonomy_id'], taxonomy['taxonomy_name']))
